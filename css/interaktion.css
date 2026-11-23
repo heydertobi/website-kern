@@ -4,7 +4,10 @@
  *
  * Einbau: nach app/interaktion.css kopieren und in globals.css
  * `@import "./interaktion.css";` direkt nach `@import "tailwindcss";`.
- * Werte im :root-Block an die Marke anpassen (Ringfarbe, Schatten).
+ * Die Werte unten sind nur Voreinstellungen. Jede Website setzt ihre eigenen
+ * --ia-*-Werte in design-system/tokens.css (Ringfarbe, Hubhöhe, Schatten, Feder).
+ * Alles steht in @layer components und :where(:root): Werte der Website und
+ * Tailwind-Klassen (hover:…) gewinnen immer, die Reihenfolge der Importe ist egal.
  *
  * Warum eine eigene Datei: Claude und andere Agenten bauen Hover, Druecken und
  * Fokus nicht von selbst. Mit diesen Klassen ist es eine Klasse am Element
@@ -21,7 +24,10 @@
  *   (Schatten, Deckkraft, Ring), nie gar keine.
  */
 
-:root {
+@layer components {
+
+
+:where(:root) {
   /* Dauern */
   --ia-dauer: 160ms;
   --ia-dauer-feder: 480ms;
@@ -225,4 +231,5 @@
    Komma und Punkt auf Ziffernbreite. Satzzeichen deshalb proportional. */
 .ia-zaehler-zeichen {
   font-variant-numeric: proportional-nums;
+}
 }
