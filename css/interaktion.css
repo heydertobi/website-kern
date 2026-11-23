@@ -1,0 +1,228 @@
+/*
+ * Interaktions-Tokens · Bewegungskatalog B1 bis B4
+ * (Bewegungskatalog im Skill scroll-storytelling)
+ *
+ * Einbau: nach app/interaktion.css kopieren und in globals.css
+ * `@import "./interaktion.css";` direkt nach `@import "tailwindcss";`.
+ * Werte im :root-Block an die Marke anpassen (Ringfarbe, Schatten).
+ *
+ * Warum eine eigene Datei: Claude und andere Agenten bauen Hover, Druecken und
+ * Fokus nicht von selbst. Mit diesen Klassen ist es eine Klasse am Element
+ * statt jedes Mal neu erfunden - und ueberall gleich.
+ *
+ * Regeln aus dem Katalog, hier fest eingebaut:
+ * - Bewegt werden nur `translate`, `scale` und `opacity` (Einzeleigenschaften,
+ *   kein `transform`: sonst ueberschreibt der Hover eine Zentrierung).
+ * - Der Schatten liegt auf ::after und wird nur ueberblendet - Schatten selbst
+ *   zu animieren kostet bei jedem Frame einen Neuzeichnen-Durchgang.
+ * - Hover nur auf Geraeten mit echtem Zeiger (`hover: hover`), sonst bleibt
+ *   auf dem Handy nach dem Tippen ein „angehobener“ Zustand stehen.
+ * - Bei `prefers-reduced-motion` gibt es Rueckmeldung ohne Bewegung
+ *   (Schatten, Deckkraft, Ring), nie gar keine.
+ */
+
+:root {
+  /* Dauern */
+  --ia-dauer: 160ms;
+  --ia-dauer-feder: 480ms;
+
+  /* Federn als CSS-Kurve, aus einer gedaempften Feder (Masse 1) berechnet.
+     ruhig: k 260, d 28 - praktisch kein Ueberschwingen (Standard)
+     lebhaft: k 300, d 22 - 7 % Ueberschwingen, fuer verspielte Marken */
+  --ia-feder-ruhig: linear(0, 0.047, 0.15, 0.277, 0.406, 0.527, 0.633, 0.722, 0.789, 0.848, 0.893, 0.927, 0.952, 0.97, 0.983, 0.991, 0.996, 1, 1.002, 1.003, 1.003, 1.003, 1.003, 1.002, 1);
+  --ia-feder-lebhaft: linear(0, 0.093, 0.277, 0.499, 0.69, 0.853, 0.96, 1.031, 1.063, 1.073, 1.067, 1.053, 1.038, 1.024, 1.012, 1.004, 0.998, 0.996, 0.995, 0.995, 0.996, 0.997, 0.998, 0.999, 1);
+  --ia-feder: var(--ia-feder-ruhig);
+  --ia-ausrollen: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* B1 Anheben */
+  --ia-heben: -3px;
+  --ia-schatten: 0 18px 36px -18px rgb(0 0 0 / 0.35);
+
+  /* B2 Druecken */
+  --ia-druck: 0.97;
+
+  /* B3 Fokus */
+  --ia-ring-farbe: currentColor;
+  --ia-ring-breite: 2px;
+  --ia-ring-abstand: 3px;
+}
+
+/* ---- B1 · Anheben bei Hover (Karten, Kacheln, grosse Buttons) ---------- */
+
+.ia-heben {
+  position: relative;
+  transition: translate var(--ia-dauer-feder) var(--ia-feder);
+}
+.ia-heben::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--ia-schatten);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ia-dauer-feder) var(--ia-ausrollen);
+}
+@media (hover: hover) {
+  .ia-heben:hover::after,
+  .ia-heben:focus-within::after {
+    opacity: 1;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ia-heben:hover,
+  .ia-heben:focus-within {
+    translate: 0 var(--ia-heben);
+  }
+}
+
+/* ---- B2 · Druecken (alles, was man anklickt) --------------------------- */
+/* Rein schnell und gerade, raus auf der Feder: so fuehlt es sich an wie ein
+   echter Knopf, der zurueckfedert. */
+
+.ia-druck {
+  transition: scale var(--ia-dauer-feder) var(--ia-feder);
+}
+.ia-druck:active {
+  transition-duration: 70ms;
+  transition-timing-function: ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ia-druck:active {
+    scale: var(--ia-druck);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ia-druck {
+    transition: opacity var(--ia-dauer) ease-out;
+  }
+  .ia-druck:active {
+    opacity: 0.8;
+  }
+}
+
+/* Beides an einem Element (klickbare Karte): sonst gewinnt die zweite
+   transition-Regel und die erste Bewegung springt. */
+.ia-heben.ia-druck {
+  transition:
+    translate var(--ia-dauer-feder) var(--ia-feder),
+    scale var(--ia-dauer-feder) var(--ia-feder);
+}
+
+/* ---- B3 · Fokus (gilt automatisch fuer alle interaktiven Elemente) ----- */
+/* :where() hat keine Spezifitaet - jede eigene Fokus-Regel im Projekt
+   gewinnt. Der Ring gleitet vom Element weg nach aussen. */
+
+:where(a, button, [role="button"], [role="switch"], [role="tab"], input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--ia-ring-breite) solid var(--ia-ring-farbe);
+  outline-offset: var(--ia-ring-abstand);
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(a, button, [role="button"], [role="switch"], [role="tab"], input, select, textarea, summary, [tabindex]) {
+    transition-property: outline-offset;
+    transition-duration: var(--ia-dauer);
+    transition-timing-function: var(--ia-ausrollen);
+  }
+  :where(a, button, [role="button"], [role="switch"], [role="tab"], input, select, textarea, summary, [tabindex]):not(:focus-visible) {
+    outline-offset: 0;
+  }
+}
+
+/* ---- B4 · Unterstreichung wischt links ein, rechts aus (Textlinks) ----- */
+
+.ia-link {
+  position: relative;
+  text-decoration: none;
+}
+.ia-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.15em;
+  height: 1.5px;
+  background: currentColor;
+  scale: 0 1;
+  transform-origin: right center;
+  transition: scale var(--ia-dauer-feder) var(--ia-ausrollen);
+}
+@media (hover: hover) {
+  .ia-link:hover::after {
+    scale: 1 1;
+    transform-origin: left center;
+  }
+}
+.ia-link:focus-visible::after {
+  scale: 1 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ia-link::after {
+    transition: none;
+  }
+}
+
+/* ---- B5 · Ziffernstreifen fuer <Zaehler> (zaehler.tsx) ------------------ */
+/* Die Ziffern 0-9 kommen aus CSS statt aus dem HTML, damit im Seitentext nur
+   die echte Zahl steht. */
+
+.ia-zaehler-streifen::before {
+  content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
+  white-space: pre;
+  display: block;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ---- B9 · Erfolgsmoment fuer <Erfolg> (erfolg.tsx) ---------------------- */
+/* Laeuft einmal beim Einhaengen. Ohne Bewegungswunsch gibt es keine
+   Animation: Haken und Text stehen fertig da, der Puls bleibt unsichtbar. */
+
+.ia-erfolg-puls {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ia-erfolg-zeichen {
+    animation: ia-erfolg-ankommen 520ms var(--ia-feder-lebhaft) both;
+  }
+  .ia-erfolg-kreis {
+    animation: ia-erfolg-strich 520ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+  .ia-erfolg-haken {
+    animation: ia-erfolg-strich 360ms 300ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+  .ia-erfolg-puls {
+    animation: ia-erfolg-puls 700ms 380ms var(--ia-ausrollen) both;
+  }
+  .ia-erfolg-text {
+    animation: ia-erfolg-text 600ms 260ms var(--ia-ausrollen) both;
+  }
+}
+@keyframes ia-erfolg-strich {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes ia-erfolg-ankommen {
+  from { scale: 0.6; opacity: 0; }
+  to { scale: 1; opacity: 1; }
+}
+@keyframes ia-erfolg-puls {
+  from { scale: 1; opacity: 0.5; }
+  to { scale: 1.9; opacity: 0; }
+}
+@keyframes ia-erfolg-text {
+  from { translate: 0 0.4em; opacity: 0; }
+  to { translate: 0 0; opacity: 1; }
+}
+.ia-zaehler-stelle::before {
+  content: attr(data-z);
+  visibility: hidden;
+}
+.ia-zaehler-zeichen::before {
+  content: attr(data-z);
+  white-space: pre;
+}
+/* Manche Schriften (z. B. Schibsted Grotesk) setzen mit Tabellenziffern auch
+   Komma und Punkt auf Ziffernbreite. Satzzeichen deshalb proportional. */
+.ia-zaehler-zeichen {
+  font-variant-numeric: proportional-nums;
+}
