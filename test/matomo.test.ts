@@ -4,11 +4,29 @@ import assert from "node:assert/strict";
 import { matomoKonfig, oeffentlicheUrl, sollGezaehltWerden, trackingUrl, type Aufruf } from "../src/matomo.ts";
 
 const k = (h: Record<string, string>) => new Headers(h);
+// Ein echter Browser schickt immer Sprache und Kennung mit.
+const BROWSER = { "accept-language": "de-DE,de;q=0.9", "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile Safari/604.1" };
 const aufruf = (h: Record<string, string>, extra: Partial<Aufruf> = {}): Aufruf => ({
   method: "GET",
   url: "https://example.org/angebote?x=1",
-  headers: k(h),
+  headers: k({ ...BROWSER, ...h }),
   ...extra,
+});
+
+test("Roboter ohne Browsersprache, mit chinesischer Sprache oder Roboter-Kennung zählen nicht", () => {
+  const seite = { "sec-fetch-dest": "document" };
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "accept-language": "" })), false);
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "accept-language": "zh-CN,zh;q=0.9" })), false);
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "accept-language": "zh" })), false);
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "user-agent": "Mozilla/5.0 (compatible; GPTBot/1.2)" })), false);
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "user-agent": "Mozilla/5.0 HeadlessChrome/140.0" })), false);
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "user-agent": "" })), false);
+});
+
+test("Menschen mit anderer Sprache zählen weiter", () => {
+  const seite = { "sec-fetch-dest": "document" };
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "accept-language": "en-US,en;q=0.9" })), true);
+  assert.equal(sollGezaehltWerden(aufruf({ ...seite, "accept-language": "tr-TR,tr;q=0.9,de;q=0.8" })), true);
 });
 
 test("voller Seitenaufruf zählt", () => {
