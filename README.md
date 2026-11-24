@@ -7,11 +7,11 @@ neue Version veröffentlicht.
 
 | Import | Inhalt |
 |---|---|
-| `@dertobi/website-kern/proxy` | `kernProxy()`: Scanner-Abwehr, Danke-Schutz, serverseitige Matomo-Meldung; `KERN_MATCHER` |
+| `@dertobi/website-kern/proxy` | `kernProxy()`: Scanner-Abwehr, Danke-Schutz, serverseitige Matomo-Meldung, optional `zaehlen(url)` als eigene Zählregel und `weiter(request)` für eigene Regeln; `KERN_MATCHER` |
 | `@dertobi/website-kern/danke` | `dankeSchutz({ "/danke-x": "/formular/" })` mit `umleitung`, `cookie`, `freigeben` |
 | `@dertobi/website-kern/scanner` | `istScannerPfad()` |
 | `@dertobi/website-kern/matomo` | serverseitige Reichweitenmessung (keine Cookies, kein Skript im Browser) |
-| `@dertobi/website-kern/seitenaufruf-route` | `POST` für `app/api/seitenaufruf/route.ts` |
+| `@dertobi/website-kern/seitenaufruf-route` | `POST` für `app/api/seitenaufruf/route.ts`; mit eigener Zählregel `seitenaufrufRoute({ zaehlen })` |
 | `@dertobi/website-kern/seitenwechsel` | `<Seitenwechsel />` meldet Seitenwechsel in der App |
 | `@dertobi/website-kern/robots` | `kernRobots()` mit Indexierungs-Sperre vor dem Livegang und KI-Crawlern |
 | `@dertobi/website-kern/next-config` | `mitKern(config)`: noindex für `*.vercel.app` |

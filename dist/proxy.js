@@ -18,7 +18,7 @@ import { DANKE_COOKIE } from "./danke.js";
  * Reihenfolge: Scanner-Pfade (leere 404, keine Messung), Danke-Schutz,
  * serverseitige Matomo-Meldung nach der Antwort (verzögert die Seite nicht).
  */
-export function kernProxy(request, event, { danke, weiter } = {}) {
+export function kernProxy(request, event, { danke, weiter, zaehlen, } = {}) {
     if (istScannerPfad(request.nextUrl.pathname)) {
         return new NextResponse(null, { status: 404, headers: { "cache-control": "public, max-age=86400" } });
     }
@@ -33,7 +33,7 @@ export function kernProxy(request, event, { danke, weiter } = {}) {
             headers: request.headers,
             optOutCookie: request.cookies.get(MATOMO_OPT_OUT_COOKIE)?.value,
         };
-        if (sollGezaehltWerden(aufruf))
+        if (sollGezaehltWerden(aufruf) && (zaehlen?.(request.url) ?? true))
             event.waitUntil(seitenaufrufMelden(aufruf, konfig));
     }
     // Eigene Regeln der Website (z. B. Weiterleitungen) zuletzt.

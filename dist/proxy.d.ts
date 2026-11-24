@@ -16,9 +16,11 @@ import { type DankeSchutz } from "./danke.js";
  * Reihenfolge: Scanner-Pfade (leere 404, keine Messung), Danke-Schutz,
  * serverseitige Matomo-Meldung nach der Antwort (verzögert die Seite nicht).
  */
-export declare function kernProxy(request: NextRequest, event: NextFetchEvent, { danke, weiter }?: {
+export declare function kernProxy(request: NextRequest, event: NextFetchEvent, { danke, weiter, zaehlen, }?: {
     danke?: DankeSchutz;
     weiter?: (request: NextRequest) => NextResponse | null;
+    /** Eigene Zählregel der Website, z. B. nur bekannte Seiten. Ohne: alles, was der Kern zählt. */
+    zaehlen?: (url: string) => boolean;
 }): NextResponse;
 /** Zum Abgleich: diese Liste steht wörtlich in `config.matcher` der proxy.ts. */
 export declare const KERN_MATCHER: readonly ["/((?!api/|_next/|_vercel/|webhook/|.*\\.[a-zA-Z0-9]+$).*)", "/((?:.*/)?\\.(?!well-known).*)", "/(.*\\.php.*)"];

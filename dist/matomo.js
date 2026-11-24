@@ -84,7 +84,7 @@ export function istRoboter(h) {
     const ua = h.get("user-agent") ?? "";
     if (!ua)
         return true;
-    return /bot|crawl|spider|slurp|headless|phantom|lighthouse|pingdom|uptime|monitor|curl|wget|python|go-http|java\/|okhttp|axios|node-fetch|scrapy|httpclient/i.test(ua);
+    return /bot|crawl|spider|slurp|scan|libwww|headless|phantom|lighthouse|pingdom|uptime|monitor|curl|wget|python|go-http|java\/|okhttp|axios|node-fetch|scrapy|httpclient/i.test(ua);
 }
 /** Widerspruch per Cookie, Global Privacy Control oder Do Not Track. */
 export function widersprochen(a) {
@@ -113,6 +113,8 @@ export function aufrufAusMeldung(meldung, anfrage) {
         return null;
     }
     if (ziel.host !== new URL(anfrage.url).host)
+        return null;
+    if (istScannerPfad(ziel.pathname))
         return null;
     if (widersprochen(anfrage))
         return null;

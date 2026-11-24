@@ -22,7 +22,16 @@ import { DANKE_COOKIE, type DankeSchutz } from "./danke.ts";
 export function kernProxy(
   request: NextRequest,
   event: NextFetchEvent,
-  { danke, weiter }: { danke?: DankeSchutz; weiter?: (request: NextRequest) => NextResponse | null } = {},
+  {
+    danke,
+    weiter,
+    zaehlen,
+  }: {
+    danke?: DankeSchutz;
+    weiter?: (request: NextRequest) => NextResponse | null;
+    /** Eigene Zählregel der Website, z. B. nur bekannte Seiten. Ohne: alles, was der Kern zählt. */
+    zaehlen?: (url: string) => boolean;
+  } = {},
 ): NextResponse {
   if (istScannerPfad(request.nextUrl.pathname)) {
     return new NextResponse(null, { status: 404, headers: { "cache-control": "public, max-age=86400" } });
@@ -39,7 +48,7 @@ export function kernProxy(
       headers: request.headers,
       optOutCookie: request.cookies.get(MATOMO_OPT_OUT_COOKIE)?.value,
     };
-    if (sollGezaehltWerden(aufruf)) event.waitUntil(seitenaufrufMelden(aufruf, konfig));
+    if (sollGezaehltWerden(aufruf) && (zaehlen?.(request.url) ?? true)) event.waitUntil(seitenaufrufMelden(aufruf, konfig));
   }
   // Eigene Regeln der Website (z. B. Weiterleitungen) zuletzt.
   return weiter?.(request) ?? NextResponse.next();

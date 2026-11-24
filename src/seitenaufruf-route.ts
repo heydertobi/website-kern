@@ -7,7 +7,17 @@ import { MATOMO_OPT_OUT_COOKIE, aufrufAusMeldung, matomoKonfig, seitenaufrufMeld
  *
  * app/api/seitenaufruf/route.ts:  export { POST } from "@dertobi/website-kern/seitenaufruf-route";
  */
-export async function POST(request: NextRequest): Promise<Response> {
+export const POST = seitenaufrufRoute();
+
+/**
+ * Wie POST, mit eigener Zählregel der Website (dieselbe wie in kernProxy):
+ *   export const POST = seitenaufrufRoute({ zaehlen: istBekannteSeite });
+ */
+export function seitenaufrufRoute({ zaehlen }: { zaehlen?: (url: string) => boolean } = {}) {
+  return (request: NextRequest) => melden(request, zaehlen);
+}
+
+async function melden(request: NextRequest, zaehlen?: (url: string) => boolean): Promise<Response> {
   const konfig = matomoKonfig();
   if (konfig) {
     const meldung = await request.json().catch(() => null);
@@ -16,7 +26,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       headers: request.headers,
       optOutCookie: request.cookies.get(MATOMO_OPT_OUT_COOKIE)?.value,
     });
-    if (aufruf) after(() => seitenaufrufMelden(aufruf, konfig));
+    if (aufruf && (zaehlen?.(aufruf.url) ?? true)) after(() => seitenaufrufMelden(aufruf, konfig));
   }
   return new Response(null, { status: 204 });
 }

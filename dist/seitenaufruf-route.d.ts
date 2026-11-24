@@ -5,4 +5,11 @@ import { type NextRequest } from "next/server";
  *
  * app/api/seitenaufruf/route.ts:  export { POST } from "@dertobi/website-kern/seitenaufruf-route";
  */
-export declare function POST(request: NextRequest): Promise<Response>;
+export declare const POST: (request: NextRequest) => Promise<Response>;
+/**
+ * Wie POST, mit eigener Zählregel der Website (dieselbe wie in kernProxy):
+ *   export const POST = seitenaufrufRoute({ zaehlen: istBekannteSeite });
+ */
+export declare function seitenaufrufRoute({ zaehlen }?: {
+    zaehlen?: (url: string) => boolean;
+}): (request: NextRequest) => Promise<Response>;

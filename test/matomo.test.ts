@@ -1,7 +1,7 @@
 // Ausführen: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { matomoKonfig, oeffentlicheUrl, sollGezaehltWerden, trackingUrl, type Aufruf } from "../src/matomo.ts";
+import { aufrufAusMeldung, istRoboter, matomoKonfig, oeffentlicheUrl, sollGezaehltWerden, trackingUrl, type Aufruf } from "../src/matomo.ts";
 
 const k = (h: Record<string, string>) => new Headers(h);
 // Ein echter Browser schickt immer Sprache und Kennung mit.
@@ -136,4 +136,17 @@ test("lokale Entwicklung zählt nie", () => {
   const env = { MATOMO_URL: "https://m.example/", MATOMO_SITE_ID: "1", MATOMO_TRACKING_TOKEN: "t" };
   assert.deepEqual(matomoKonfig(env), { url: "https://m.example", siteId: "1", token: "t" });
   assert.equal(matomoKonfig({ ...env, NODE_ENV: "development" }), null);
+});
+
+test("gemeldete Seitenwechsel auf Scanner-Pfade zählen nicht", () => {
+  const anfrage = { url: "https://kunde.de/api/seitenaufruf", headers: new Headers({ "accept-language": "de" }) };
+  assert.equal(aufrufAusMeldung({ url: "https://kunde.de/wp-login.php" }, anfrage), null);
+  assert.notEqual(aufrufAusMeldung({ url: "https://kunde.de/kontakt" }, anfrage), null);
+});
+
+test("scan und libwww gelten als Roboter", () => {
+  const h = (ua: string) => new Headers({ "accept-language": "de", "user-agent": ua });
+  assert.equal(istRoboter(h("Mozilla/5.0 (Macintosh) Safari/605")), false);
+  assert.equal(istRoboter(h("libwww-perl/6.0")), true);
+  assert.equal(istRoboter(h("SomeScanner 1.0")), true);
 });
