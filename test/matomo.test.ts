@@ -131,3 +131,9 @@ test("Scanner-Pfade zählen nicht", async () => {
     assert.equal(istScannerPfad(pfad), false, pfad);
   }
 });
+
+test("lokale Entwicklung zählt nie", () => {
+  const env = { MATOMO_URL: "https://m.example/", MATOMO_SITE_ID: "1", MATOMO_TRACKING_TOKEN: "t" };
+  assert.deepEqual(matomoKonfig(env), { url: "https://m.example", siteId: "1", token: "t" });
+  assert.equal(matomoKonfig({ ...env, NODE_ENV: "development" }), null);
+});

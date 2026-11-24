@@ -43,6 +43,8 @@ export interface MatomoKonfig {
 }
 
 export function matomoKonfig(env: Record<string, string | undefined> = process.env): MatomoKonfig | null {
+  // Lokale Entwicklung zählt nie, auch wenn die Zugangsdaten in .env.local stehen.
+  if (env.NODE_ENV === "development") return null;
   const url = env.MATOMO_URL?.replace(/\/$/, "");
   const siteId = env.MATOMO_SITE_ID;
   const token = env.MATOMO_TRACKING_TOKEN;
@@ -178,7 +180,15 @@ export function trackingUrl(a: Aufruf, k: MatomoKonfig, zufall: string = String(
 /** Meldet den Aufruf. Wirft nie: Messung darf keine Seite stören. */
 export async function seitenaufrufMelden(a: Aufruf, k: MatomoKonfig): Promise<void> {
   try {
-    await fetch(trackingUrl(a, k), { method: "GET", signal: AbortSignal.timeout(3000), cache: "no-store" });
+    // POST statt GET: Der Schlüssel (token_auth) steht so nicht in der Adresse und
+    // damit nicht in Zugriffsprotokollen.
+    const u = new URL(trackingUrl(a, k));
+    await fetch(u.origin + u.pathname, {
+      method: "POST",
+      body: u.searchParams,
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+    });
   } catch {
     // Matomo nicht erreichbar: Seite läuft weiter, dieser Aufruf fehlt.
   }
