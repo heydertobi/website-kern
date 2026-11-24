@@ -18,6 +18,7 @@ neue Version veröffentlicht.
 | `@dertobi/website-kern/reveal` | `<Reveal preset="fade-up">` über GSAP ScrollTrigger, reduced-motion eingebaut |
 | `@dertobi/website-kern/motion-presets` | Katalog der Einblend-Bewegungen (für `/motion`) |
 | `@dertobi/website-kern/interaktion.css` | Hover, Drücken, Fokus (Bewegungskatalog B1 bis B4) |
+| `npx website-kern-llms-full` | erzeugt `public/llms-full.txt` (Volltext aller öffentlichen Seiten, S22); `--basis http://localhost:3123` gegen den lokalen Build, Domain aus `public/llms.txt` |
 
 Einbau zeigt die Website-Vorlage (proxy.ts, lib/danke.ts,
 app/robots.ts, next.config.ts, app/globals.css).
