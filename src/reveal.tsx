@@ -1,17 +1,27 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+// GSAP kommt per dynamischem Import erst nach dem ersten Zeichnen der Seite
+// (Lighthouse: rund 46 KB weniger im ersten Paket). Bis dahin sind die Bloecke
+// per CSS (.gsap-reveal) ausgeblendet und blenden danach wie gewohnt ein.
+import type { gsap as GsapTyp } from "gsap";
 // Nur der Typ - der Import wird beim Bauen entfernt. Das Plugin selbst kommt
 // weiter unten per dynamischem Import und nur dann, wenn ein Preset Text
 // zerlegt. Sonst laegen 3,6 KB auf jeder Seite, die sie nie braucht.
 import type { SplitText as SplitTextTyp } from "gsap/SplitText";
-import { MOTION_PRESETS, type MotionPreset } from "./motion-presets.ts";
+import { MOTION_PRESETS, type MotionPreset, type PresetDefinition } from "./motion-presets.ts";
 
 const cn = (...klassen: (string | undefined | false)[]) => klassen.filter(Boolean).join(" ");
 
-gsap.registerPlugin(ScrollTrigger);
+/* Einmal laden, von allen Reveal-Bloecken gemeinsam genutzt. */
+let gsapLaden: Promise<typeof GsapTyp> | null = null;
+function ladeGsap() {
+  gsapLaden ??= Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([g, st]) => {
+    g.gsap.registerPlugin(st.ScrollTrigger);
+    return g.gsap;
+  });
+  return gsapLaden;
+}
 
 /**
  * Blendet Inhalte beim Scrollen ein - ueber GSAP ScrollTrigger.
@@ -29,6 +39,11 @@ gsap.registerPlugin(ScrollTrigger);
  * und Kartenraster. Ohne `stagger` bewegt sich der Block als Ganzes.
  *
  * Bei `prefers-reduced-motion` passiert nichts; der Inhalt ist sofort da.
+ *
+ * `oben` ist fuer den ersten Bildschirm: Der Block bekommt die Klasse
+ * `reveal-oben` (Einblendung per CSS der Website, Verzug ueber `--verzug`) und
+ * wartet nicht auf JavaScript. `start` verschiebt den Startpunkt, `presets`
+ * ersetzt einzelne Presets durch eigene Werte der Website.
  */
 export function Reveal({
   children,
@@ -40,6 +55,11 @@ export function Reveal({
   dauer,
   ease,
   as: Tag = "div",
+  oben = false,
+  start = "top 88%",
+  presets,
+  id,
+  ...daten
 }: {
   children: React.ReactNode;
   className?: string;
@@ -53,21 +73,33 @@ export function Reveal({
   dauer?: number;
   /** Ueberschreibt die Kurve des Presets. Nur fuer das Motion-Labor gedacht. */
   ease?: string;
-  as?: "div" | "section" | "ul" | "li" | "h1" | "h2" | "span";
+  as?: "div" | "section" | "ul" | "ol" | "li" | "h1" | "h2" | "span" | "blockquote";
+  /** Erster Bildschirm: reine CSS-Einblendung (Klasse reveal-oben), wartet nicht auf JavaScript. */
+  oben?: boolean;
+  /** Startpunkt des ScrollTriggers, Standard "top 88%". */
+  start?: string;
+  /** Eigene Werte der Website fuer einzelne Presets. */
+  presets?: Partial<Record<MotionPreset, PresetDefinition>>;
+  /** Anker-ID (Menuespruenge) */
+  id?: string;
+  /** data-Attribute werden durchgereicht. */
+  [daten: `data-${string}`]: string | undefined;
 }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || oben) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const def = MOTION_PRESETS[preset];
-    let ctx: gsap.Context | null = null;
+    const def = presets?.[preset] ?? MOTION_PRESETS[preset];
+    let ctx: ReturnType<typeof GsapTyp.context> | null = null;
     let split: SplitTextTyp | null = null;
     let abgebrochen = false;
 
     const starten = async () => {
+      const gsap = await ladeGsap();
+      if (abgebrochen) return;
       // Zerlegende Presets brauchen das Plugin - alle anderen nicht.
       let SplitTextKlasse: typeof SplitTextTyp | null = null;
       if (def.split) {
@@ -117,9 +149,9 @@ export function Reveal({
           },
           scrollTrigger: {
             trigger: el,
-            // Startet, wenn die Oberkante 88 % der Fensterhoehe erreicht -
-            // also kurz nachdem der Block ins Bild kommt.
-            start: "top 88%",
+            // Standard: startet, wenn die Oberkante 88 % der Fensterhoehe
+            // erreicht - also kurz nachdem der Block ins Bild kommt.
+            start,
             once: true,
           },
         });
@@ -133,13 +165,16 @@ export function Reveal({
       split?.revert();
       ctx?.revert();
     };
-  }, [preset, stagger, staggerAb, delay, dauer, ease]);
+  }, [preset, stagger, staggerAb, delay, dauer, ease, oben, start, presets]);
 
   return (
     <Tag
       // @ts-expect-error - ref-Typ variiert je nach Tag
       ref={ref}
-      className={cn("gsap-reveal", className)}
+      id={id}
+      {...daten}
+      className={cn(oben ? "reveal-oben" : "gsap-reveal", className)}
+      style={oben && delay ? ({ "--verzug": `${delay}s` } as React.CSSProperties) : undefined}
     >
       {children}
     </Tag>

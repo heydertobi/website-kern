@@ -1,6 +1,6 @@
 {
   "name": "@dertobi/website-kern",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Gemeinsame Bausteine aller Kunden-Websites (Website-Standard S6)",
   "private": true,
   "type": "module",
@@ -45,6 +45,10 @@
     "./reveal": {
       "types": "./dist/reveal.d.ts",
       "default": "./dist/reveal.js"
+    },
+    "./reveal-leicht": {
+      "types": "./dist/reveal-leicht.d.ts",
+      "default": "./dist/reveal-leicht.js"
     },
     "./motion-presets": {
       "types": "./dist/motion-presets.d.ts",

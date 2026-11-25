@@ -1,11 +1,17 @@
 "use client";
 import { jsx as _jsx } from "react/jsx-runtime";
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MOTION_PRESETS } from "./motion-presets.js";
 const cn = (...klassen) => klassen.filter(Boolean).join(" ");
-gsap.registerPlugin(ScrollTrigger);
+/* Einmal laden, von allen Reveal-Bloecken gemeinsam genutzt. */
+let gsapLaden = null;
+function ladeGsap() {
+    gsapLaden ??= Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([g, st]) => {
+        g.gsap.registerPlugin(st.ScrollTrigger);
+        return g.gsap;
+    });
+    return gsapLaden;
+}
 /**
  * Blendet Inhalte beim Scrollen ein - ueber GSAP ScrollTrigger.
  *
@@ -22,20 +28,28 @@ gsap.registerPlugin(ScrollTrigger);
  * und Kartenraster. Ohne `stagger` bewegt sich der Block als Ganzes.
  *
  * Bei `prefers-reduced-motion` passiert nichts; der Inhalt ist sofort da.
+ *
+ * `oben` ist fuer den ersten Bildschirm: Der Block bekommt die Klasse
+ * `reveal-oben` (Einblendung per CSS der Website, Verzug ueber `--verzug`) und
+ * wartet nicht auf JavaScript. `start` verschiebt den Startpunkt, `presets`
+ * ersetzt einzelne Presets durch eigene Werte der Website.
  */
-export function Reveal({ children, className, preset = "fade-up", stagger = false, staggerAb = "start", delay = 0, dauer, ease, as: Tag = "div", }) {
+export function Reveal({ children, className, preset = "fade-up", stagger = false, staggerAb = "start", delay = 0, dauer, ease, as: Tag = "div", oben = false, start = "top 88%", presets, id, ...daten }) {
     const ref = useRef(null);
     useEffect(() => {
         const el = ref.current;
-        if (!el)
+        if (!el || oben)
             return;
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
             return;
-        const def = MOTION_PRESETS[preset];
+        const def = presets?.[preset] ?? MOTION_PRESETS[preset];
         let ctx = null;
         let split = null;
         let abgebrochen = false;
         const starten = async () => {
+            const gsap = await ladeGsap();
+            if (abgebrochen)
+                return;
             // Zerlegende Presets brauchen das Plugin - alle anderen nicht.
             let SplitTextKlasse = null;
             if (def.split) {
@@ -85,9 +99,9 @@ export function Reveal({ children, className, preset = "fade-up", stagger = fals
                     },
                     scrollTrigger: {
                         trigger: el,
-                        // Startet, wenn die Oberkante 88 % der Fensterhoehe erreicht -
-                        // also kurz nachdem der Block ins Bild kommt.
-                        start: "top 88%",
+                        // Standard: startet, wenn die Oberkante 88 % der Fensterhoehe
+                        // erreicht - also kurz nachdem der Block ins Bild kommt.
+                        start,
                         once: true,
                     },
                 });
@@ -99,10 +113,10 @@ export function Reveal({ children, className, preset = "fade-up", stagger = fals
             split?.revert();
             ctx?.revert();
         };
-    }, [preset, stagger, staggerAb, delay, dauer, ease]);
+    }, [preset, stagger, staggerAb, delay, dauer, ease, oben, start, presets]);
     return (_jsx(Tag
     // @ts-expect-error - ref-Typ variiert je nach Tag
     , { 
         // @ts-expect-error - ref-Typ variiert je nach Tag
-        ref: ref, className: cn("gsap-reveal", className), children: children }));
+        ref: ref, id: id, ...daten, className: cn(oben ? "reveal-oben" : "gsap-reveal", className), style: oben && delay ? { "--verzug": `${delay}s` } : undefined, children: children }));
 }
