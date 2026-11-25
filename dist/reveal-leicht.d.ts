@@ -12,6 +12,9 @@ import { type ReactNode } from "react";
  * - Ohne IntersectionObserver wird sofort gezeigt: Inhalt bleibt nie unsichtbar.
  * - `prefers-reduced-motion`: sofort sichtbar, ohne Uebergang.
  * - `immediate` fuer den ersten Bildschirm: ohne Ausblenden gerendert.
+ * - `data-sichtbar` steht am Element ("true" nach dem Einblenden). Kinder koennen
+ *   daran haengen, wenn die Website `className="group/reveal"` mitgibt:
+ *   `group-data-[sichtbar=true]/reveal:scale-x-100`.
  */
 export declare function RevealLeicht({ children, delay, className, immediate, versatz, dauer, kurve, schwelle, rand, as: Tag, }: {
     children: ReactNode;

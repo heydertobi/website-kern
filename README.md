@@ -16,7 +16,7 @@ neue Version veröffentlicht.
 | `@dertobi/website-kern/robots` | `kernRobots()` mit Indexierungs-Sperre vor dem Livegang und KI-Crawlern |
 | `@dertobi/website-kern/next-config` | `mitKern(config)`: noindex für `*.vercel.app` |
 | `@dertobi/website-kern/reveal` | `<Reveal preset="fade-up">` über GSAP ScrollTrigger (GSAP wird erst nach dem ersten Zeichnen geladen), reduced-motion eingebaut; `oben` für den ersten Bildschirm (CSS-Klasse `reveal-oben`), `start`, eigene `presets`, `id` und `data-*` |
-| `@dertobi/website-kern/reveal-leicht` | `<RevealLeicht delay={100}>` ohne GSAP (IntersectionObserver und CSS-Übergang), `immediate` für den ersten Bildschirm, `versatz`, `dauer`, `kurve`, `schwelle`, `rand` |
+| `@dertobi/website-kern/reveal-leicht` | `<RevealLeicht delay={100}>` ohne GSAP (IntersectionObserver und CSS-Übergang), `immediate` für den ersten Bildschirm, `versatz`, `dauer`, `kurve`, `schwelle`, `rand`; `data-sichtbar` für Kinder (mit `className="group/reveal"`) |
 | `@dertobi/website-kern/motion-presets` | Katalog der Einblend-Bewegungen (für `/motion`) |
 | `@dertobi/website-kern/interaktion.css` | Hover, Drücken, Fokus (Bewegungskatalog B1 bis B4) |
 | `npx website-kern-llms-full` | erzeugt `public/llms-full.txt` (Volltext aller öffentlichen Seiten, S22); `--basis http://localhost:3123` gegen den lokalen Build, Domain aus `public/llms.txt` |

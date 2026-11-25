@@ -20,6 +20,9 @@ function abonniereBewegung(melden) {
  * - Ohne IntersectionObserver wird sofort gezeigt: Inhalt bleibt nie unsichtbar.
  * - `prefers-reduced-motion`: sofort sichtbar, ohne Uebergang.
  * - `immediate` fuer den ersten Bildschirm: ohne Ausblenden gerendert.
+ * - `data-sichtbar` steht am Element ("true" nach dem Einblenden). Kinder koennen
+ *   daran haengen, wenn die Website `className="group/reveal"` mitgibt:
+ *   `group-data-[sichtbar=true]/reveal:scale-x-100`.
  */
 export function RevealLeicht({ children, delay = 0, className = "", immediate = false, versatz = "1.5rem", dauer = 700, kurve = "cubic-bezier(0, 0, 0.2, 1)", schwelle = 0, rand = "0px 0px -12% 0px", as: Tag = "div", }) {
     const ref = useRef(null);
@@ -80,5 +83,5 @@ export function RevealLeicht({ children, delay = 0, className = "", immediate = 
     // @ts-expect-error - ref-Typ variiert je nach Tag
     , { 
         // @ts-expect-error - ref-Typ variiert je nach Tag
-        ref: ref, className: className || undefined, style: stil, children: children }));
+        ref: ref, "data-sichtbar": sichtbar, className: className || undefined, style: stil, children: children }));
 }

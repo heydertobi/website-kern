@@ -1,6 +1,6 @@
 {
   "name": "@dertobi/website-kern",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Gemeinsame Bausteine aller Kunden-Websites (Website-Standard S6)",
   "private": true,
   "type": "module",
